@@ -8,6 +8,11 @@ variable "create_resource_group" {
   default     = false
 }
 
+variable "create_network_watcher" {
+  description = "Whether to create network watcher"
+  default     = true
+}
+
 variable "resource_group_name" {
   description = "Name to be used on resource group"
   default     = ""
@@ -34,12 +39,17 @@ variable "dns_servers" {
 }
 
 variable "public_subnets" {
-  description = "A list of public subnets inside the VPC"
+  description = "A list of public subnets inside virtual network"
   default     = []
 }
 
 variable "private_subnets" {
-  description = "A list of private subnets inside the VPC"
+  description = "A list of private subnets inside virtual network"
+  default     = []
+}
+
+variable "aci_subnets" {
+  description = "A list of Azure Container Instances (ACI) subnets inside virtual network"
   default     = []
 }
 
@@ -49,7 +59,12 @@ variable "public_subnets_service_endpoints" {
 }
 
 variable "private_subnets_service_endpoints" {
-  description = "The list of Service endpoints to associate with the private subnets  . Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage."
+  description = "The list of Service endpoints to associate with the private subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage."
+  default     = []
+}
+
+variable "aci_subnets_service_endpoints" {
+  description = "The list of Service endpoints to associate with the ACI subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage."
   default     = []
 }
 
@@ -102,6 +117,11 @@ variable "private_route_table_tags" {
   default     = {}
 }
 
+variable "network_watcher_tags" {
+  description = "Additional tags for the network watcher"
+  default     = {}
+}
+
 # Suffixes
 
 variable "public_subnet_suffix" {
@@ -112,6 +132,11 @@ variable "public_subnet_suffix" {
 variable "private_subnet_suffix" {
   description = "Suffix to append to private subnets name"
   default     = "private"
+}
+
+variable "aci_subnet_suffix" {
+  description = "Suffix to append to private subnets name"
+  default     = "aci"
 }
 
 variable "public_route_table_suffix" {
@@ -130,6 +155,11 @@ variable "public_internet_route_suffix" {
 }
 
 variable "private_vnetlocal_route_suffix" {
-  description = "Suffix to append to private VnetLocal route table name"
+  description = "Suffix to append to private VnetLocal route name"
   default     = "private-vnetlocal"
+}
+
+variable "network_watcher_suffix" {
+  description = "Suffix to append to network watcher name"
+  default     = "nw"
 }

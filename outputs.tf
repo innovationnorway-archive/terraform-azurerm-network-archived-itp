@@ -27,28 +27,38 @@ output "this_virtual_network_name" {
 
 output "this_virtual_network_address_space" {
   description = "List of address spaces that are used the virtual network."
-  value       = ["${azurerm_virtual_network.this.*.address_space}"]
+  value       = ["${flatten(azurerm_virtual_network.this.*.address_space)}"]
 }
 
 # Subnets
 output "public_subnet_ids" {
   description = "List of IDs of public subnets"
-  value       = ["${azurerm_subnet.public.*.id}"]
+  value       = ["${flatten(azurerm_subnet.public.*.id)}"]
 }
 
 output "public_subnet_address_prefixes" {
   description = "List of address prefix for public subnets"
-  value       = ["${azurerm_subnet.public.*.address_prefix}"]
+  value       = ["${flatten(azurerm_subnet.public.*.address_prefix)}"]
 }
 
 output "private_subnet_ids" {
   description = "List of IDs of private subnets"
-  value       = ["${azurerm_subnet.private.*.id}"]
+  value       = ["${flatten(azurerm_subnet.private.*.id)}"]
 }
 
 output "private_subnet_address_prefixes" {
   description = "List of address prefix for private subnets"
-  value       = ["${azurerm_subnet.private.*.address_prefix}"]
+  value       = ["${flatten(azurerm_subnet.private.*.address_prefix)}"]
+}
+
+output "aci_subnet_ids" {
+  description = "List of IDs of ACI subnets"
+  value       = ["${flatten(azurerm_subnet.aci.*.id)}"]
+}
+
+output "aci_subnet_address_prefixes" {
+  description = "List of address prefix for ACI subnets"
+  value       = ["${flatten(azurerm_subnet.aci.*.address_prefix)}"]
 }
 
 # Route tables
@@ -59,7 +69,7 @@ output "public_route_table_id" {
 
 output "public_route_table_subnets" {
   description = "List of subnets associated with public route table"
-  value       = ["${azurerm_route_table.public.*.subnets}"]
+  value       = ["${flatten(azurerm_route_table.public.*.subnets)}"]
 }
 
 output "private_route_table_id" {
@@ -69,5 +79,11 @@ output "private_route_table_id" {
 
 output "private_route_table_subnets" {
   description = "List of subnets associated with private route table"
-  value       = ["${azurerm_route_table.private.*.subnets}"]
+  value       = ["${flatten(azurerm_route_table.private.*.subnets)}"]
+}
+
+# Network watcher
+output "this_network_watcher_id" {
+  description = "ID of Network Watcher"
+  value       = "${element(concat(azurerm_network_watcher.this.*.id, list("")), 0)}"
 }

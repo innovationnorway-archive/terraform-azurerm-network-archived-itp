@@ -38,6 +38,15 @@ module "network" {
 }
 ```
 
+## Subnets
+
+This module handles creation of these types of subnets:
+1. Public - `public_subnets` defines a list of address spaces for public subnets. They can be configured to allow access to the internet either via `VirtualAppliance` or using any other hop type.
+1. Private - `private_subnets` defines a list of address spaces for private subnets. They can be configured to access resources using hop type `VnetLocal`.
+1. Azure Container Instances (ACI) - `aci_subnets` defines a list of address spaces for ACI subnets where service delegation is set to `Microsoft.ContainerInstance/containerGroups`.
+
+It is possible to add other routes to the associated route tables outside of this module.   
+
 ## Create resource group or use an existing one
 
 By default this module will not create a resource group and a name of an existing one should be provided in an argument `resource_group_name`.

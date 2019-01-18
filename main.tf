@@ -46,6 +46,14 @@ resource "azurerm_subnet" "public" {
   virtual_network_name = "${local.virtual_network_name}"
 
   service_endpoints = ["${var.public_subnets_service_endpoints}"]
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
+      # This should not be necessary in AzureRM Provider (2.0)
+      "route_table_id"
+    ]
+  }
 }
 
 #################
@@ -61,6 +69,39 @@ resource "azurerm_subnet" "private" {
   virtual_network_name = "${local.virtual_network_name}"
 
   service_endpoints = ["${var.private_subnets_service_endpoints}"]
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
+      # This should not be necessary in AzureRM Provider (2.0)
+      "route_table_id"
+    ]
+
+  }
+}
+
+###################################
+# Container Instances (ACI) subnet
+###################################
+resource "azurerm_subnet" "aci" {
+  count = "${var.create_network && length(var.aci_subnets) > 0 ? length(var.aci_subnets) : 0}"
+
+  resource_group_name = "${local.resource_group_name}"
+
+  name                 = "${format("%s-%s-%d", var.name, var.aci_subnet_suffix, count.index)}"
+  address_prefix       = "${element(var.aci_subnets, count.index)}"
+  virtual_network_name = "${local.virtual_network_name}"
+
+  service_endpoints = ["${var.aci_subnets_service_endpoints}"]
+
+  delegation {
+    name = "aci-delegation"
+
+    service_delegation {
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
 }
 
 #################
@@ -154,3 +195,16 @@ resource "azurerm_subnet_route_table_association" "private" {
 //
 //azurerm_network_security_group + rule for public (no rules, because there are no restrictions)
 
+
+##################
+# Network watcher
+##################
+resource "azurerm_network_watcher" "this" {
+  count = "${var.create_network && var.create_network_watcher ? 1 : 0}"
+
+  name          =  "${format("%s-%s", var.name, var.network_watcher_suffix)}"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  tags = "${merge(map("Name", format("%s-%s", var.name, var.network_watcher_suffix)), var.tags, var.network_watcher_tags)}"
+}
