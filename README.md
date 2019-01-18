@@ -95,19 +95,25 @@ module "network" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
+| aci\_subnet\_suffix | Suffix to append to private subnets name | string | `"aci"` | no |
+| aci\_subnets | A list of Azure Container Instances (ACI) subnets inside virtual network | list | `[]` | no |
+| aci\_subnets\_service\_endpoints | The list of Service endpoints to associate with the ACI subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage. | list | `[]` | no |
 | address\_spaces | List of address spaces to use for virtual network | list | `[]` | no |
 | create\_network | Controls if networking resources should be created (it affects almost all resources) | string | `"true"` | no |
+| create\_network\_watcher | Whether to create network watcher | string | `"true"` | no |
 | create\_resource\_group | Whether to create resource group and use it for all networking resources | string | `"false"` | no |
 | dns\_servers | List of dns servers to use for virtual network | list | `[]` | no |
 | location | Location where resource should be created | string | `""` | no |
 | name | Name to use on resources | string | `""` | no |
+| network\_watcher\_suffix | Suffix to append to network watcher name | string | `"nw"` | no |
+| network\_watcher\_tags | Additional tags for the network watcher | map | `{}` | no |
 | private\_route\_table\_disable\_bgp\_route\_propagation | Boolean flag which controls propagation of routes learned by BGP on private route table. True means disable. | string | `"false"` | no |
 | private\_route\_table\_suffix | Suffix to append to private route table name | string | `"private"` | no |
 | private\_route\_table\_tags | Additional tags for the private route table | map | `{}` | no |
 | private\_subnet\_suffix | Suffix to append to private subnets name | string | `"private"` | no |
-| private\_subnets | A list of private subnets inside the VPC | list | `[]` | no |
-| private\_subnets\_service\_endpoints | The list of Service endpoints to associate with the private subnets  . Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage. | list | `[]` | no |
-| private\_vnetlocal\_route\_suffix | Suffix to append to private VnetLocal route table name | string | `"private-vnetlocal"` | no |
+| private\_subnets | A list of private subnets inside virtual network | list | `[]` | no |
+| private\_subnets\_service\_endpoints | The list of Service endpoints to associate with the private subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage. | list | `[]` | no |
+| private\_vnetlocal\_route\_suffix | Suffix to append to private VnetLocal route name | string | `"private-vnetlocal"` | no |
 | public\_internet\_route\_next\_hop\_in\_ip\_address | Contains the IP address packets should be forwarded to when destination is 0.0.0.0/0 for the public subnets. Next hop values are only allowed in routes where the next hop type is VirtualAppliance. | string | `""` | no |
 | public\_internet\_route\_next\_hop\_type | The type of Azure hop the packet should be sent when reaching 0.0.0.0/0 for the public subnets. Possible values are VirtualNetworkGateway, VnetLocal, Internet, VirtualAppliance and None. | string | `"Internet"` | no |
 | public\_internet\_route\_suffix | Suffix to append to public internet route name | string | `"public"` | no |
@@ -115,7 +121,7 @@ module "network" {
 | public\_route\_table\_suffix | Suffix to append to public route table name | string | `"public"` | no |
 | public\_route\_table\_tags | Additional tags for the public route table | map | `{}` | no |
 | public\_subnet\_suffix | Suffix to append to public subnets name | string | `"public"` | no |
-| public\_subnets | A list of public subnets inside the VPC | list | `[]` | no |
+| public\_subnets | A list of public subnets inside virtual network | list | `[]` | no |
 | public\_subnets\_service\_endpoints | The list of Service endpoints to associate with the public subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage. | list | `[]` | no |
 | resource\_group\_name | Name to be used on resource group | string | `""` | no |
 | resource\_group\_tags | Additional tags for the resource group | map | `{}` | no |
@@ -126,6 +132,8 @@ module "network" {
 
 | Name | Description |
 |------|-------------|
+| aci\_subnet\_address\_prefixes | List of address prefix for ACI subnets |
+| aci\_subnet\_ids | List of IDs of ACI subnets |
 | private\_route\_table\_id | ID of private route table |
 | private\_route\_table\_subnets | List of subnets associated with private route table |
 | private\_subnet\_address\_prefixes | List of address prefix for private subnets |
@@ -134,6 +142,7 @@ module "network" {
 | public\_route\_table\_subnets | List of subnets associated with public route table |
 | public\_subnet\_address\_prefixes | List of address prefix for public subnets |
 | public\_subnet\_ids | List of IDs of public subnets |
+| this\_network\_watcher\_id | ID of Network Watcher |
 | this\_resource\_group\_id | The ID of the resource group in which resources are created. |
 | this\_resource\_group\_location | The location of the resource group in which resources are created |
 | this\_resource\_group\_name | The name of the resource group in which resources are created |

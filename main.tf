@@ -51,7 +51,7 @@ resource "azurerm_subnet" "public" {
     ignore_changes = [
       # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
       # This should not be necessary in AzureRM Provider (2.0)
-      "route_table_id"
+      "route_table_id",
     ]
   }
 }
@@ -74,9 +74,8 @@ resource "azurerm_subnet" "private" {
     ignore_changes = [
       # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
       # This should not be necessary in AzureRM Provider (2.0)
-      "route_table_id"
+      "route_table_id",
     ]
-
   }
 }
 
@@ -195,14 +194,13 @@ resource "azurerm_subnet_route_table_association" "private" {
 //
 //azurerm_network_security_group + rule for public (no rules, because there are no restrictions)
 
-
 ##################
 # Network watcher
 ##################
 resource "azurerm_network_watcher" "this" {
   count = "${var.create_network && var.create_network_watcher ? 1 : 0}"
 
-  name          =  "${format("%s-%s", var.name, var.network_watcher_suffix)}"
+  name                = "${format("%s-%s", var.name, var.network_watcher_suffix)}"
   location            = "${local.location}"
   resource_group_name = "${local.resource_group_name}"
 
