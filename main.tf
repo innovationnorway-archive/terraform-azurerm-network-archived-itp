@@ -5,6 +5,9 @@ locals {
   virtual_network_name = "${element(concat(azurerm_virtual_network.this.*.name, list("")), 0)}"
 }
 
+#################
+# Resource group
+#################
 data "azurerm_resource_group" "this" {
   count = "${var.create_network && (1 - var.create_resource_group) != 0 ? 1 : 0}"
 
@@ -20,6 +23,9 @@ resource "azurerm_resource_group" "this" {
   tags = "${merge(map("Name", format("%s", var.resource_group_name)), var.tags, var.resource_group_tags)}"
 }
 
+##################
+# Virtual network
+##################
 resource "azurerm_virtual_network" "this" {
   count = "${var.create_network ? 1 : 0}"
 
@@ -49,9 +55,11 @@ resource "azurerm_subnet" "public" {
 
   lifecycle {
     ignore_changes = [
-      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html . Same for network_security_group_id.
       # This should not be necessary in AzureRM Provider (2.0)
       "route_table_id",
+
+      "network_security_group_id",
     ]
   }
 }
@@ -72,9 +80,11 @@ resource "azurerm_subnet" "private" {
 
   lifecycle {
     ignore_changes = [
-      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html . Same for network_security_group_id.
       # This should not be necessary in AzureRM Provider (2.0)
       "route_table_id",
+
+      "network_security_group_id",
     ]
   }
 }
@@ -100,6 +110,16 @@ resource "azurerm_subnet" "aci" {
       name    = "Microsoft.ContainerInstance/containerGroups"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html . Same for network_security_group_id.
+      # This should not be necessary in AzureRM Provider (2.0)
+      "route_table_id",
+
+      "network_security_group_id",
+    ]
   }
 }
 
@@ -189,10 +209,59 @@ resource "azurerm_subnet_route_table_association" "private" {
   route_table_id = "${element(azurerm_route_table.private.*.id, count.index)}"
 }
 
-//
-//azurerm_network_security_group + rule for private (no inbound access from outside, but allow access from vnet)
-//
-//azurerm_network_security_group + rule for public (no rules, because there are no restrictions)
+#####################################
+# Network security group per subnets
+#####################################
+resource "azurerm_network_security_group" "public" {
+  count = "${var.create_network && length(var.public_subnets) > 0 ? 1 : 0}"
+
+  name                = "${var.name}-public"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  tags = "${merge(map("Name", var.network_security_group_name), var.tags, var.network_security_group_tags)}"
+}
+
+resource "azurerm_network_security_group" "private" {
+  count = "${var.create_network && length(var.private_subnets) > 0 ? 1 : 0}"
+
+  name                = "${var.name}-private"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  tags = "${merge(map("Name", var.network_security_group_name), var.tags, var.network_security_group_tags)}"
+}
+
+resource "azurerm_network_security_group" "aci" {
+  count = "${var.create_network && length(var.aci_subnets) > 0 ? 1 : 0}"
+
+  name                = "${var.name}-aci"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  tags = "${merge(map("Name", var.network_security_group_name), var.tags, var.network_security_group_tags)}"
+}
+
+resource "azurerm_subnet_network_security_group_association" "public" {
+  count = "${var.create_network && length(var.public_subnets) > 0 ? length(var.public_subnets) : 0}"
+
+  subnet_id                 = "${element(azurerm_subnet.public.*.id, count.index)}"
+  network_security_group_id = "${element(azurerm_network_security_group.public.*.id, 0)}"
+}
+
+resource "azurerm_subnet_network_security_group_association" "private" {
+  count = "${var.create_network && length(var.private_subnets) > 0 ? length(var.private_subnets) : 0}"
+
+  subnet_id                 = "${element(azurerm_subnet.private.*.id, count.index)}"
+  network_security_group_id = "${element(azurerm_network_security_group.private.*.id, 0)}"
+}
+
+resource "azurerm_subnet_network_security_group_association" "aci" {
+  count = "${var.create_network && length(var.aci_subnets) > 0 ? length(var.aci_subnets) : 0}"
+
+  subnet_id                 = "${element(azurerm_subnet.aci.*.id, count.index)}"
+  network_security_group_id = "${element(azurerm_network_security_group.aci.*.id, 0)}"
+}
 
 ##################
 # Network watcher
@@ -206,3 +275,8 @@ resource "azurerm_network_watcher" "this" {
 
   tags = "${merge(map("Name", format("%s-%s", var.name, var.network_watcher_suffix)), var.tags, var.network_watcher_tags)}"
 }
+
+// @todo: add nsg rules depending on subnet type
+// * private (no inbound access from outside, but allow access from vnet)
+// * public (no rules, because there are no restrictions)
+

@@ -82,6 +82,23 @@ output "private_route_table_subnets" {
   value       = ["${flatten(azurerm_route_table.private.*.subnets)}"]
 }
 
+# Network security groups per subnets
+
+output "public_network_security_group_id" {
+  description = "The Network Security Group ID of public subnet"
+  value       = "${element(concat(azurerm_network_security_group.public.*.id, list("")), 0)}"
+}
+
+output "private_network_security_group_id" {
+  description = "The Network Security Group ID of private subnet"
+  value       = "${element(concat(azurerm_network_security_group.private.*.id, list("")), 0)}"
+}
+
+output "aci_network_security_group_id" {
+  description = "The Network Security Group ID of ACI subnet"
+  value       = "${element(concat(azurerm_network_security_group.aci.*.id, list("")), 0)}"
+}
+
 # Network watcher
 output "this_network_watcher_id" {
   description = "ID of Network Watcher"

@@ -8,6 +8,11 @@ variable "create_resource_group" {
   default     = false
 }
 
+variable "create_network_security_group" {
+  description = "Whether to create network security group"
+  default     = true
+}
+
 variable "create_network_watcher" {
   description = "Whether to create network watcher"
   default     = true
@@ -15,6 +20,11 @@ variable "create_network_watcher" {
 
 variable "resource_group_name" {
   description = "Name to be used on resource group"
+  default     = ""
+}
+
+variable "network_security_group_name" {
+  description = "Name to be used on network security group"
   default     = ""
 }
 
@@ -114,6 +124,11 @@ variable "public_route_table_tags" {
 
 variable "private_route_table_tags" {
   description = "Additional tags for the private route table"
+  default     = {}
+}
+
+variable "network_security_group_tags" {
+  description = "Additional tags for the network security group"
   default     = {}
 }
 
