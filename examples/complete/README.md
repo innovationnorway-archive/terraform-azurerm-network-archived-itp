@@ -21,7 +21,7 @@ Note that this example may create resources which can cost money. Run `terraform
 |------|-------------|
 | private\_subnet\_ids | List of IDs of private subnets |
 | public\_subnet\_ids | List of IDs of public subnets |
-| this\_virtual\_network\_address\_space | The CIDR block of the VPC |
+| this\_virtual\_network\_address\_space | List of address spaces of the virtual network |
 | this\_virtual\_network\_id | The ID of the virtual network |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

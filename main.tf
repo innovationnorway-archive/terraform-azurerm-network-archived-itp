@@ -173,7 +173,7 @@ resource "azurerm_route" "public_internet_virtualappliance" {
   route_table_name       = "${azurerm_route_table.public.name}"
   address_prefix         = "0.0.0.0/0"
   next_hop_type          = "${var.public_internet_route_next_hop_type}"
-  next_hop_in_ip_address = "${var.public_internet_route_next_hop_in_ip_address}"                                                               # ${azurerm_firewall.main.ip_configuration.0.private_ip_address}
+  next_hop_in_ip_address = "${lower(var.public_internet_route_next_hop_in_ip_address) == lower("AzureFirewall") ? element(concat(azurerm_firewall.this.*.ip_configuration.0.private_ip_address, list("")), 0) : var.public_internet_route_next_hop_in_ip_address}"
 }
 
 #################
@@ -276,7 +276,53 @@ resource "azurerm_network_watcher" "this" {
   tags = "${merge(map("Name", format("%s-%s", var.name, var.network_watcher_suffix)), var.tags, var.network_watcher_tags)}"
 }
 
-// @todo: add nsg rules depending on subnet type
-// * private (no inbound access from outside, but allow access from vnet)
-// * public (no rules, because there are no restrictions)
+###########
+# Firewall
+###########
+resource "azurerm_subnet" "firewall" {
+  count = "${var.create_network && var.create_firewall ? 1 : 0}"
 
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = "${local.resource_group_name}"
+  address_prefix       = "${var.firewall_subnet_address_prefix}"
+  virtual_network_name = "${local.virtual_network_name}"
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html . Same for network_security_group_id.
+      # This should not be necessary in AzureRM Provider (2.0)
+      "route_table_id",
+
+      "network_security_group_id",
+    ]
+  }
+}
+
+resource "azurerm_public_ip" "firewall" {
+  count = "${var.create_network && var.create_firewall ? 1 : 0}"
+
+  name                = "${format("%s-%s", var.name, var.firewall_suffix)}"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = "${merge(map("Name", format("%s-%s", var.name, var.firewall_suffix)), var.tags, var.firewall_tags)}"
+}
+
+resource "azurerm_firewall" "this" {
+  count = "${var.create_network && var.create_firewall ? 1 : 0}"
+
+  name                = "${format("%s-%s", var.name, var.firewall_suffix)}"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  ip_configuration {
+    name      = "${format("%s-%s", var.name, var.firewall_suffix)}"
+    subnet_id = "${element(azurerm_subnet.firewall.*.id, 0)}"
+
+    public_ip_address_id = "${element(azurerm_public_ip.firewall.*.id, 0)}"
+  }
+
+  tags = "${merge(map("Name", format("%s-%s", var.name, var.firewall_suffix)), var.tags, var.firewall_tags)}"
+}

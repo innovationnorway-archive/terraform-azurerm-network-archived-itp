@@ -12,6 +12,7 @@ These types of resources are supported:
 * [Route Table](https://www.terraform.io/docs/providers/azurerm/r/route_table.html)
 * [Network Security Group](https://www.terraform.io/docs/providers/azurerm/r/network_security_group.html)
 * [Network Watcher](https://www.terraform.io/docs/providers/azurerm/r/network_watcher.html)
+* [Firewall](https://www.terraform.io/docs/providers/azurerm/r/firewall.html)
 
 ## Usage
 
@@ -31,6 +32,15 @@ module "network" {
 
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   private_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  aci_subnets     = ["10.0.128.0/24"]
+
+  # Routes
+  public_internet_route_next_hop_type          = "VirtualAppliance"
+  public_internet_route_next_hop_in_ip_address = "AzureFirewall"
+
+  # Firewall
+  create_firewall = true
+  firewall_subnet_address_prefix = "10.0.192.0/24"
 
   # Tags
   tags = {
@@ -46,6 +56,7 @@ This module handles creation of these types of subnets:
 1. Public - `public_subnets` defines a list of address spaces for public subnets. They can be configured to allow access to the internet either via `VirtualAppliance` or using any other hop type.
 1. Private - `private_subnets` defines a list of address spaces for private subnets. They can be configured to access resources using hop type `VnetLocal`.
 1. Azure Container Instances (ACI) - `aci_subnets` defines a list of address spaces for ACI subnets where service delegation is set to `Microsoft.ContainerInstance/containerGroups`.
+1. Firewall - `firewall_subnet_address_prefix` defines an address prefix for firewall subnet (name `AzureFirewallSubnet`).
 
 It is possible to add other routes to the associated route tables outside of this module.   
 
@@ -55,6 +66,12 @@ This module also creates network security groups for each type of subnet (public
 
 By default this module will not create a resource group and a name of an existing one should be provided in an argument `resource_group_name`.
 If you want to create it using this module, set argument `create_resource_group = true`.
+
+## Firewall
+
+To create Azure Firewall resources (subnet, public IP and firewall) specify `create_firewall = true`.
+
+To enable route to the internet from public subnet via Azure Firewall, firewall has to be created (`create_firewall = true`), set `public_internet_route_next_hop_type = "VirtualAppliance"` and `public_internet_route_next_hop_in_ip_address = "AzureFirewall"`.
 
 ## Tagging
 
@@ -103,11 +120,15 @@ module "network" {
 | aci\_subnets | A list of Azure Container Instances (ACI) subnets inside virtual network | list | `[]` | no |
 | aci\_subnets\_service\_endpoints | The list of Service endpoints to associate with the ACI subnets. Possible values include: Microsoft.AzureActiveDirectory, Microsoft.AzureCosmosDB, Microsoft.EventHub, Microsoft.KeyVault, Microsoft.ServiceBus, Microsoft.Sql and Microsoft.Storage. | list | `[]` | no |
 | address\_spaces | List of address spaces to use for virtual network | list | `[]` | no |
+| create\_firewall | Whether to create firewall (incl. subnet and public IP)) | string | `"false"` | no |
 | create\_network | Controls if networking resources should be created (it affects almost all resources) | string | `"true"` | no |
 | create\_network\_security\_group | Whether to create network security group | string | `"true"` | no |
 | create\_network\_watcher | Whether to create network watcher | string | `"true"` | no |
 | create\_resource\_group | Whether to create resource group and use it for all networking resources | string | `"false"` | no |
 | dns\_servers | List of dns servers to use for virtual network | list | `[]` | no |
+| firewall\_subnet\_address\_prefix | Address prefix to use on firewall subnet. Default is a valid value, which should be overriden. | string | `"0.0.0.0/0"` | no |
+| firewall\_suffix | Suffix to append to firewall name | string | `"firewall"` | no |
+| firewall\_tags | Additional tags for the firewall | map | `{}` | no |
 | location | Location where resource should be created | string | `""` | no |
 | name | Name to use on resources | string | `""` | no |
 | network\_security\_group\_name | Name to be used on network security group | string | `""` | no |
@@ -142,6 +163,10 @@ module "network" {
 | aci\_network\_security\_group\_id | The Network Security Group ID of ACI subnet |
 | aci\_subnet\_address\_prefixes | List of address prefix for ACI subnets |
 | aci\_subnet\_ids | List of IDs of ACI subnets |
+| firewall\_public\_ip\_id | ID of firewall public IP |
+| firewall\_public\_ip\_ip\_address | Public IP of firewall |
+| firewall\_subnet\_address\_prefixes | List of address prefix for firewall subnets |
+| firewall\_subnet\_ids | List of IDs of firewall subnets |
 | private\_network\_security\_group\_id | The Network Security Group ID of private subnet |
 | private\_route\_table\_id | ID of private route table |
 | private\_route\_table\_subnets | List of subnets associated with private route table |
@@ -152,6 +177,7 @@ module "network" {
 | public\_route\_table\_subnets | List of subnets associated with public route table |
 | public\_subnet\_address\_prefixes | List of address prefix for public subnets |
 | public\_subnet\_ids | List of IDs of public subnets |
+| this\_firewall\_id | The Resource ID of the Azure Firewall |
 | this\_network\_watcher\_id | ID of Network Watcher |
 | this\_resource\_group\_id | The ID of the resource group in which resources are created. |
 | this\_resource\_group\_location | The location of the resource group in which resources are created |

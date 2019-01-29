@@ -104,3 +104,29 @@ output "this_network_watcher_id" {
   description = "ID of Network Watcher"
   value       = "${element(concat(azurerm_network_watcher.this.*.id, list("")), 0)}"
 }
+
+# Firewall
+output "this_firewall_id" {
+  description = "The Resource ID of the Azure Firewall"
+  value       = "${element(concat(azurerm_firewall.this.*.id, list("")), 0)}"
+}
+
+output "firewall_subnet_ids" {
+  description = "List of IDs of firewall subnets"
+  value       = ["${flatten(azurerm_subnet.firewall.*.id)}"]
+}
+
+output "firewall_subnet_address_prefixes" {
+  description = "List of address prefix for firewall subnets"
+  value       = ["${flatten(azurerm_subnet.firewall.*.address_prefix)}"]
+}
+
+output "firewall_public_ip_id" {
+  description = "ID of firewall public IP"
+  value       = "${element(concat(azurerm_public_ip.firewall.*.id, list("")), 0)}"
+}
+
+output "firewall_public_ip_ip_address" {
+  description = "Public IP of firewall"
+  value       = "${element(concat(azurerm_public_ip.firewall.*.ip_address, list("")), 0)}"
+}

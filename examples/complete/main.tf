@@ -18,10 +18,15 @@ module "network" {
   private_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
   aci_subnets     = ["10.0.121.0/24", "10.0.122.0/24", "10.0.123.0/24"]
 
-  # private_subnets_service_endpoints = ["Microsoft.Storage"]
+  private_subnets_service_endpoints = ["Microsoft.Storage"]
 
   public_internet_route_next_hop_type          = "VirtualAppliance" # "Internet" is default
-  public_internet_route_next_hop_in_ip_address = "11.11.11.11"
+  public_internet_route_next_hop_in_ip_address = "AzureFirewall"
+
+  # Firewall
+  create_firewall                = true
+  firewall_subnet_address_prefix = "10.0.125.0/24"
+
   # Tags
   virtual_network_tags = {
     Owner = "test-user"

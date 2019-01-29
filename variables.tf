@@ -18,6 +18,11 @@ variable "create_network_watcher" {
   default     = true
 }
 
+variable "create_firewall" {
+  description = "Whether to create firewall (incl. subnet and public IP))"
+  default     = false
+}
+
 variable "resource_group_name" {
   description = "Name to be used on resource group"
   default     = ""
@@ -61,6 +66,11 @@ variable "private_subnets" {
 variable "aci_subnets" {
   description = "A list of Azure Container Instances (ACI) subnets inside virtual network"
   default     = []
+}
+
+variable "firewall_subnet_address_prefix" {
+  description = "Address prefix to use on firewall subnet. Default is a valid value, which should be overriden."
+  default     = "0.0.0.0/0"
 }
 
 variable "public_subnets_service_endpoints" {
@@ -137,6 +147,11 @@ variable "network_watcher_tags" {
   default     = {}
 }
 
+variable "firewall_tags" {
+  description = "Additional tags for the firewall"
+  default     = {}
+}
+
 # Suffixes
 
 variable "public_subnet_suffix" {
@@ -177,4 +192,9 @@ variable "private_vnetlocal_route_suffix" {
 variable "network_watcher_suffix" {
   description = "Suffix to append to network watcher name"
   default     = "nw"
+}
+
+variable "firewall_suffix" {
+  description = "Suffix to append to firewall name"
+  default     = "firewall"
 }
