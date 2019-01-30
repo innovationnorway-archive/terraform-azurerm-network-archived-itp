@@ -326,3 +326,71 @@ resource "azurerm_firewall" "this" {
 
   tags = "${merge(map("Name", format("%s-%s", var.name, var.firewall_suffix)), var.tags, var.firewall_tags)}"
 }
+
+##########################
+# Virtual Network Gateway
+##########################
+resource "azurerm_subnet" "gateway" {
+  count = "${var.create_network && var.create_vnet_gateway ? 1 : 0}"
+
+  name                 = "GatewaySubnet"
+  resource_group_name  = "${local.resource_group_name}"
+  address_prefix       = "${var.vnet_gateway_subnet_address_prefix}"
+  virtual_network_name = "${local.virtual_network_name}"
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring changes in route_table_id attribute to prevent dependency between azurerm_subnet and azurerm_subnet_route_table_association as describe here: https://www.terraform.io/docs/providers/azurerm/r/subnet_route_table_association.html . Same for network_security_group_id.
+      # This should not be necessary in AzureRM Provider (2.0)
+      "route_table_id",
+
+      "network_security_group_id",
+    ]
+  }
+}
+
+resource "azurerm_public_ip" "gateway" {
+  count = "${var.create_network && var.create_vnet_gateway ? 1 : 0}"
+
+  name                = "${format("%s-%s", var.name, var.vnet_gateway_suffix)}"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+  allocation_method   = "Dynamic"
+
+  tags = "${merge(map("Name", format("%s-%s", var.name, var.vnet_gateway_suffix)), var.tags, var.vnet_gateway_tags)}"
+}
+
+resource "azurerm_virtual_network_gateway" "with_active_standby_vpn_client_and_certificates" {
+  count = "${var.create_network && var.create_vnet_gateway && lower(var.vnet_gateway_type) == lower("Vpn") && !var.vnet_gateway_active_active ? 1 : 0}" #" ? 1 : 0}"
+
+  name                = "${format("%s-%s", var.name, var.vnet_gateway_suffix)}"
+  location            = "${local.location}"
+  resource_group_name = "${local.resource_group_name}"
+
+  type     = "${var.vnet_gateway_type}"
+  vpn_type = "${var.vnet_gateway_vpn_type}"
+
+  active_active                    = "${var.vnet_gateway_active_active}"
+  default_local_network_gateway_id = "${var.vnet_gateway_default_local_network_gateway_id}"
+  sku                              = "${var.vnet_gateway_sku}"
+
+  enable_bgp   = "${var.vnet_gateway_enable_bgp}"
+  bgp_settings = "${var.vnet_gateway_bgp_settings}"
+
+  ip_configuration {
+    name                          = "vnetGatewayConfig"
+    subnet_id                     = "${element(azurerm_subnet.gateway.*.id, 0)}"
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = "${element(azurerm_public_ip.gateway.*.id, 0)}"
+  }
+
+  vpn_client_configuration {
+    address_space        = ["${var.vnet_gateway_vpn_client_configuration_address_space}"]
+    vpn_client_protocols = ["${var.vnet_gateway_vpn_client_configuration_vpn_client_protocols}"]
+
+    root_certificate    = ["${var.vnet_gateway_vpn_client_configuration_root_certificate}"]
+    revoked_certificate = ["${var.vnet_gateway_vpn_client_configuration_revoked_certificate}"]
+  }
+
+  tags = "${merge(map("Name", format("%s-%s", var.name, var.vnet_gateway_suffix)), var.tags, var.vnet_gateway_tags)}"
+}

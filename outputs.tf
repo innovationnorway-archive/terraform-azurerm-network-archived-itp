@@ -130,3 +130,29 @@ output "firewall_public_ip_ip_address" {
   description = "Public IP of firewall"
   value       = "${element(concat(azurerm_public_ip.firewall.*.ip_address, list("")), 0)}"
 }
+
+# Virtual Gateway
+output "this_virtual_network_gateway_id" {
+  description = "The ID of the Virtual Network Gateway"
+  value       = "${element(concat(azurerm_virtual_network_gateway.with_active_standby_vpn_client_and_certificates.*.id, list("")), 0)}"
+}
+
+output "gateway_subnet_ids" {
+  description = "List of IDs of gateway subnets"
+  value       = ["${flatten(azurerm_subnet.gateway.*.id)}"]
+}
+
+output "gateway_subnet_address_prefixes" {
+  description = "List of address prefix for gateway subnets"
+  value       = ["${flatten(azurerm_subnet.gateway.*.address_prefix)}"]
+}
+
+output "gateway_public_ip_id" {
+  description = "ID of gateway public IP"
+  value       = "${element(concat(azurerm_public_ip.gateway.*.id, list("")), 0)}"
+}
+
+output "gateway_public_ip_ip_address" {
+  description = "Public IP of gateway"
+  value       = "${element(concat(azurerm_public_ip.gateway.*.ip_address, list("")), 0)}"
+}
