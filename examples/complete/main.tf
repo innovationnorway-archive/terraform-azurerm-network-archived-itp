@@ -27,8 +27,8 @@ module "network" {
   create_firewall                = true
   firewall_subnet_address_prefix = "10.0.125.0/24"
 
-  # Virtual Network Gateway
-  create_vnet_gateway                                        = true
+  # Virtual Network Gateway - disabled to save 30 minutes during creation
+  create_vnet_gateway                                        = false
   vnet_gateway_subnet_address_prefix                         = "10.0.126.0/24"
   vnet_gateway_vpn_client_configuration_address_space        = ["30.30.0.0/24"]
   vnet_gateway_vpn_client_configuration_vpn_client_protocols = ["SSTP"]
