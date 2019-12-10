@@ -132,7 +132,7 @@ module "network" {
 
 ## Examples
 
-* [Complete network](https://github.com/innovationnorways/terraform-azurerm-network/tree/master/examples/complete)
+* [Complete network](https://github.com/innovationnorway/terraform-azurerm-network/tree/master/examples/complete)
 
 ## Other resources
 
